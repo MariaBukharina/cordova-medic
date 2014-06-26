@@ -81,15 +81,8 @@ module.exports = function(output, sha, entry_point, couchdb_host, test_timeout, 
                     fs.writeFileSync(tempJasmine, "var library_sha = '" + sha + "';\n" + fs.readFileSync(tempJasmine, 'utf-8'), 'utf-8');
                 }
 
-                // modify start page
+                //TODO: here should be manifest parsing for phone and store 8.0 also
                 var manifest = fs.readFileSync(path.join(output, 'package.store.appxmanifest')).toString().split('\n');
-                for (var i in manifest) {
-                    if (manifest[i].indexOf('www/index.html') != -1) {
-                        log('Modifying start page to ' + entry_point);
-                        manifest[i] = manifest[i].replace('www/index.html', entry_point);
-                        break;
-                    }
-                }
                 // set permanent package name to prevent multiple installations
                 for (var i in manifest) {
                     if (manifest[i].indexOf('<Identity') != -1) {
@@ -102,17 +95,19 @@ module.exports = function(output, sha, entry_point, couchdb_host, test_timeout, 
 
                 fs.writeFileSync(path.join(output, 'package.store.appxmanifest'), manifest);
 
-                //TODO: here should be manifest parsing for phone and store 8.0 also
-
+                // var configFile = path.join(output, 'www', 'config.xml');
+                var configFile = path.join(output, 'config.xml');
+                // modify start page
+                fs.writeFileSync(configFile, fs.readFileSync(configFile, 'utf-8').replace(
+                    /<content\s*src=".*"/gi, '<content src="' + entry_point.split('www\/').join('') + '"'), 'utf-8');
                 // make sure the couch db server is whitelisted
-                var configFile = path.join(output, 'www', 'config.xml');
                 fs.writeFileSync(configFile, fs.readFileSync(configFile, 'utf-8').replace(
                   /<access origin="http:..audio.ibeat.org" *.>/gi,'<access origin="http://audio.ibeat.org" /><access origin="'+couchdb_host+'" />', 'utf-8'));
 
                 // specify couchdb server and sha for cordova medic plugin via medic.json
                 log('Write medic.json to autotest folder');
                 var medic_config='{"sha":"'+sha+'","couchdb":"'+couchdb_host+'"}';
-                fs.writeFileSync(path.join(output, '..', '..', 'www','autotest','pages', 'medic.json'),medic_config,'utf-8');
+                fs.writeFileSync(path.join(output, 'www','autotest','pages', 'medic.json'),medic_config,'utf-8');
                 
                 defer.resolve();
             });
@@ -124,100 +119,9 @@ module.exports = function(output, sha, entry_point, couchdb_host, test_timeout, 
         return defer.promise;
     }
 
-    function parsePackageInfo() {
-        var d = q.defer();
-        var cmd = 'powershell Get-AppxPackage ' + packageName;
-        log(cmd);
-        shell.exec(cmd, {silent:true, async:true}, function(code, output) {
-            log(output);
-            if (code > 0) {
-                d.reject('getting package info failed with code ' + code);
-            } else {
-                output = output.split('\n');
-                for (var i = 0; i < output.length; ++i) {
-                    if (output[i].indexOf(':') == -1) continue;
-                    var key = output[i].split(':')[0].trim();
-                    var value = output[i].split(':')[1].trim();
-                    while (output[i + 1] && output[i + 1].indexOf(':') == -1) value += output[++i].trim();
-                    packageInfo[key] = value;
-                }
-                d.resolve(packageInfo['PackageFullName']);
-            }
-        });
-
-        return d.promise;
-    }
-
-    function removeInstalledPackage(fullName) {
-        var d = q.defer();
-        if (fullName) {
-            log('Application with the same name is already installed, removing...');
-            var cmd = 'powershell Remove-AppxPackage ' + fullName;
-            log(cmd);
-            shell.exec(cmd, {async:true, silent:true}, function(code, output) {
-                log(output);
-                if (code > 0) {
-                    d.reject('package removing failed with code ' + code);
-                }
-                else {
-                    d.resolve();
-                }
-            });
-        }
-        else {
-            d.resolve();
-        }
-
-        return d.promise;
-    }
-
-    function getAppId() {
-        var cmd = 'powershell (get-appxpackagemanifest (get-appxpackage ' + packageName +')).package.applications.application.id';
-        var d = q.defer();
-        log(cmd);
-        shell.exec(cmd, {silent:true, async:true}, function(code, output) {
-            log(output);
-            if (code > 0) {
-                d.reject('unable to get installed app id');
-            } else {
-                d.resolve(packageInfo['PackageFamilyName'] + '!' + output);
-            }
-        });
-
-        return d.promise;
-    }
-
-    function runApp(appId) {
-        var utilsDir = '\\..\\..\\..\\medic\\src\\utils';
-        shell.cd(output + utilsDir);
-        var d = q.defer();
-        // the following hack with explorer.exe usage is required to start the tool w/o Admin privileges;
-        // in other case there will be the 'app can't open while File Explorer is running with administrator privileges ...' error
-
-        var runner = path.join(output, 'AppPackages', 'runLocal.bat'),
-            storeAppLauncher = path.join(output, utilsDir, 'StoreAppLauncher.exe');
-        fs.writeFileSync(runner, storeAppLauncher + ' ' + appId, 'utf-8');
-
-
-        var cmd = 'explorer ' + runner;
-        log(cmd);
-        shell.exec(cmd, {silent:true,async:true}, function(code, output) {
-            // TODO: even if the command succeeded, code is '1'. must be investigated
-            // temporary added check for not empty output
-            log(output);
-            if (code > 0 && output != "") {
-                d.reject('unable to run ' + appId);
-            } else {
-                d.resolve();
-            }
-        });
-
-        return d.promise;
-    }
-
-    return prepareMobileSpec().then(parsePackageInfo).then(removeInstalledPackage).then(function() {
+    return prepareMobileSpec().then(function() {
             return deploy(output, sha);
-        }).then(parsePackageInfo).then(getAppId).then(runApp).then(function() {
+        }).then(function() {
             return waitTestsCompleted(sha, 1000 * test_timeout);
         });
-}
+};
