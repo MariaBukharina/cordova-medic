@@ -82,7 +82,7 @@ module.exports = function(output, sha, entry_point, couchdb_host, test_timeout, 
                 }
 
                 // modify start page
-                var manifest = fs.readFileSync(path.join(output, 'package.appxmanifest')).toString().split('\n');
+                var manifest = fs.readFileSync(path.join(output, 'package.store.appxmanifest')).toString().split('\n');
                 for (var i in manifest) {
                     if (manifest[i].indexOf('www/index.html') != -1) {
                         log('Modifying start page to ' + entry_point);
@@ -100,7 +100,9 @@ module.exports = function(output, sha, entry_point, couchdb_host, test_timeout, 
 
                 manifest = manifest.join('\n');
 
-                fs.writeFileSync(path.join(output, 'package.appxmanifest'), manifest);
+                fs.writeFileSync(path.join(output, 'package.store.appxmanifest'), manifest);
+
+                //TODO: here should be manifest parsing for phone and store 8.0 also
 
                 // make sure the couch db server is whitelisted
                 var configFile = path.join(output, 'www', 'config.xml');

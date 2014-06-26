@@ -17,7 +17,7 @@ var TEST_OK=true;
 
 if(argv.branch) BRANCH=argv.branch;
 
-var output_location = path.join(MSPEC_DIR,'platforms','windows8');
+var output_location = path.join(MSPEC_DIR,'platforms','windows');
 
 buildinfo('Windows8', BRANCH, function (error, sha ) {
     if(error) {
