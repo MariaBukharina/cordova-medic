@@ -1,3 +1,4 @@
+var fs = require('fs');
 var path = require ('path');
 var shell = require('shelljs');
 var buildinfo = require('./buildinfo');
@@ -17,7 +18,11 @@ var TEST_OK=true;
 
 if(argv.branch) BRANCH=argv.branch;
 
-var output_location = path.join(MSPEC_DIR,'platforms','windows');
+var output_location = path.join(MSPEC_DIR,'platforms','windows8');
+// fixes tests crash when windows universal apps used to test
+if (!fs.existsSync(output_location)){
+    output_location = path.join(MSPEC_DIR,'platforms','windows');
+}
 
 buildinfo('Windows8', BRANCH, function (error, sha ) {
     if(error) {

@@ -82,7 +82,11 @@ module.exports = function(output, sha, entry_point, couchdb_host, test_timeout, 
                 }
 
                 //TODO: here should be manifest parsing for phone and store 8.0 also
-                var manifest = fs.readFileSync(path.join(output, 'package.store.appxmanifest')).toString().split('\n');
+                var manifestFile = path.join(output, 'package.appxmanifest');
+                if (!fs.existsSync(manifestFile)){
+                    manifestFile = path.join(output, 'package.store.appxmanifest');
+                }
+                var manifest = fs.readFileSync(manifestFile).toString().split('\n');
                 // set permanent package name to prevent multiple installations
                 for (var i in manifest) {
                     if (manifest[i].indexOf('<Identity') != -1) {
@@ -93,10 +97,10 @@ module.exports = function(output, sha, entry_point, couchdb_host, test_timeout, 
 
                 manifest = manifest.join('\n');
 
-                fs.writeFileSync(path.join(output, 'package.store.appxmanifest'), manifest);
+                fs.writeFileSync(manifestFile, manifest);
 
                 // var configFile = path.join(output, 'www', 'config.xml');
-                var configFile = path.join(output, 'config.xml');
+                var configFile = path.join(output, '..', '..', 'config.xml');
                 // modify start page
                 fs.writeFileSync(configFile, fs.readFileSync(configFile, 'utf-8').replace(
                     /<content\s*src=".*"/gi, '<content src="' + entry_point.split('www\/').join('') + '"'), 'utf-8');
@@ -107,7 +111,7 @@ module.exports = function(output, sha, entry_point, couchdb_host, test_timeout, 
                 // specify couchdb server and sha for cordova medic plugin via medic.json
                 log('Write medic.json to autotest folder');
                 var medic_config='{"sha":"'+sha+'","couchdb":"'+couchdb_host+'"}';
-                fs.writeFileSync(path.join(output, 'www','autotest','pages', 'medic.json'),medic_config,'utf-8');
+                fs.writeFileSync(path.join(output, '..', '..', 'www','autotest','pages', 'medic.json'),medic_config,'utf-8');
                 
                 defer.resolve();
             });

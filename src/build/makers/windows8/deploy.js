@@ -1,8 +1,9 @@
 var shell = require('shelljs'),
     q     = require('q'),
-    fs    = require('fs');
+    fs    = require('fs'),
+    path  = require('path');
 
-module.exports = function deploy(path, sha) {
+module.exports = function deploy(platform_path, sha) {
     function log(msg) {
         console.log('[WINDOWS8] [DEPLOY] ' + msg + ' (' + sha + ')');
     }
@@ -10,8 +11,9 @@ module.exports = function deploy(path, sha) {
     function build() {
         var d = q.defer();
         log('compiling the app...');
-        // 'restricted' is used to prevent powershell script (part of build.bat) which requires user interaction to run
-        var cmd = 'powershell Set-ExecutionPolicy restricted && cordova\\build.bat';
+            // var cmd = 'powershell Set-ExecutionPolicy restricted && cordova\\build.bat';
+        // and launch cordova build from there
+        var cmd = '..\\cordova-cli\\bin\\cordova.cmd build';
         log(cmd);
         shell.exec(cmd, {silent:true, async:true}, function(code, output) {
             log(output);
@@ -29,9 +31,10 @@ module.exports = function deploy(path, sha) {
         log('Running app...');
         // the following hack with explorer.exe usage is required to start the tool w/o Admin privileges;
         // in other case there will be the 'app can't open while File Explorer is running with administrator privileges ...' error
-        var cmd = 'cordova\\run.bat --nobuild',
+        // 'restricted' is used to prevent powershell script (part of build.bat) which requires user interaction to run
+        var cmd = '..\\cordova-cli\\bin\\cordova.cmd run --nobuild';
             runner = 'run.bat';
-        fs.writeFileSync(runner, 'cd /d ' + path + '\n' + cmd, 'utf-8');
+        fs.writeFileSync(runner, 'cd /d "' + shell.pwd() + '"\n' + cmd, 'utf-8');
         log(cmd);
         shell.exec('explorer run.bat', {silent:true, async:true}, function(code, output) {
             log(output);
@@ -44,6 +47,7 @@ module.exports = function deploy(path, sha) {
         return d.promise;
     }
 
-    shell.cd(path);
+    // let's go to app root directory
+    shell.cd(path.join(platform_path, '..', '..'));
     return build().then(run);
 };
