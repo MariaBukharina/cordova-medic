@@ -1,58 +1,34 @@
 var shell        = require('shelljs'),
     path         = require('path'),
     n            = require('ncallbacks'),
-    deploy       = require('./windows8/deploy'),
     fs           = require('fs'),
     mspec        = require('./mobile_spec'),
     couch        = require('../../couchdb/interface'),
-    q            = require('q');
-
+    q            = require('q'),
+    testRunner   = require('./testRunner');
 
 module.exports = function(output, sha, entry_point, couchdb_host, test_timeout, callback) {
 
-    var packageName = 'org.apache.mobilespec';
-    var packageInfo = {};
-
-    function query_for_sha(sha, callback) {
-
-        var view = 'sha?key="' + sha + '"';
-        // get build errors from couch for each repo
-        couch.mobilespec_results.query_view('results', view, function(error, result) {
-            if (error) {
-                console.error('query failed for mobilespec_results', error);
-                callback(true, error);
-                return;
+    function run() {
+        var d = q.defer();
+        log('Running app...');
+        // the following hack with explorer.exe usage is required to start the tool w/o Admin privileges;
+        // in other case there will be the 'app can't open while File Explorer is running with administrator privileges ...' error
+        // 'restricted' is used to prevent powershell script (part of build.bat) which requires user interaction to run
+        var cmd = '..\\cordova-cli\\bin\\cordova.cmd run';
+            runner = 'run.bat';
+        fs.writeFileSync(runner, 'cd /d "' + shell.pwd() + '"\n' + cmd, 'utf-8');
+        log(cmd);
+        shell.exec('explorer run.bat', {silent:true, async:true}, function(code, output) {
+            log(output);
+            if (code > 0 && output !== "") {
+                d.reject('Unable to run application');
+            } else {
+                d.resolve();
             }
-            callback(false, result);
         });
+        return d.promise;
     }
-
-    function isTestsCompleted(sha, callback) {
-        query_for_sha(sha, function(isFailed, res) {
-            // return True if there is no error and there are test results in db for specified sha
-            callback(!isFailed && res.rows.length > 0);
-        });
-    }
-
-    function waitTestsCompleted(sha, timeoutMs) {
-       var defer = q.defer();
-       var startTime = Date.now(),
-           timeoutTime = startTime + timeoutMs,
-           checkInterval = 10 * 1000; // 10 secs
-
-        var testFinishedFn = setInterval(function(){
-
-            isTestsCompleted(sha, function(isSuccess) {
-                // if tests are finished or timeout
-                if (isSuccess || Date.now() > timeoutTime) {
-                    clearInterval(testFinishedFn);
-                    isSuccess ? defer.resolve() : defer.reject('timed out');
-                }
-            });
-        }, checkInterval);
-        return defer.promise;
-    }
-
 
     function log(msg) {
         console.log('[WINDOWS8] ' + msg + ' (sha: ' + sha + ')');
@@ -75,30 +51,6 @@ module.exports = function(output, sha, entry_point, couchdb_host, test_timeout, 
                 }
 
                 log('Modifying Cordova windows8 application.');
-                // add the sha to the junit reporter
-                var tempJasmine = path.join(output, 'www', 'jasmine-jsreporter.js');
-                if (fs.existsSync(tempJasmine)) {
-                    fs.writeFileSync(tempJasmine, "var library_sha = '" + sha + "';\n" + fs.readFileSync(tempJasmine, 'utf-8'), 'utf-8');
-                }
-
-                //TODO: here should be manifest parsing for phone and store 8.0 also
-                var manifestFile = path.join(output, 'package.appxmanifest');
-                if (!fs.existsSync(manifestFile)){
-                    manifestFile = path.join(output, 'package.store.appxmanifest');
-                }
-                var manifest = fs.readFileSync(manifestFile).toString().split('\n');
-                // set permanent package name to prevent multiple installations
-                for (var i in manifest) {
-                    if (manifest[i].indexOf('<Identity') != -1) {
-                        manifest[i] = manifest[i].replace(/Name=".+?"/gi, 'Name="'+packageName+'"');
-                        break;
-                    }
-                }
-
-                manifest = manifest.join('\n');
-
-                fs.writeFileSync(manifestFile, manifest);
-
                 // var configFile = path.join(output, 'www', 'config.xml');
                 var configFile = path.join(output, '..', '..', 'config.xml');
                 // modify start page
@@ -124,8 +76,9 @@ module.exports = function(output, sha, entry_point, couchdb_host, test_timeout, 
     }
 
     return prepareMobileSpec().then(function() {
-            return deploy(output, sha);
+            shell.cd(path.join(output, '..', '..'));
+            return run();
         }).then(function() {
-            return waitTestsCompleted(sha, 1000 * test_timeout);
+            return testRunner.waitTestsCompleted(sha, 1000 * test_timeout);
         });
 };
