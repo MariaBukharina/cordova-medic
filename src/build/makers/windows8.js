@@ -50,12 +50,18 @@ module.exports = function(output, sha, entry_point, couchdb_host, test_timeout, 
                     throw new Error('Error thrown modifying Windows8 mobile spec application.');
                 }
 
-
                 // specify couchdb server and sha for cordova medic plugin via medic.json
                 log('Write medic.json to autotest folder');
                 var medic_config='{"sha":"'+sha+'","couchdb":"'+couchdb_host+'"}';
                 fs.writeFileSync(path.join(output, '..', '..', 'www','autotest','pages', 'medic.json'),medic_config,'utf-8');
-                
+
+                // Disable file plugin tests due to Mobilespec app failure on windows 8
+                fs.writeFileSync(
+                    path.join(output, '..', '..', 'www','autotest','pages', 'all.html'),
+                    fs.readFileSync(path.join(output, '..', '..', 'www','autotest','pages', 'all.html'), 'utf-8')
+                        .replace('<script type="text/javascript" src="../tests/file.tests.js"></script>',
+                            '<!-- <script type="text/javascript" src="../tests/file.tests.js"></script> -->'),'utf-8');
+
                 defer.resolve();
             });
         }
