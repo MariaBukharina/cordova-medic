@@ -50,15 +50,6 @@ module.exports = function(output, sha, entry_point, couchdb_host, test_timeout, 
                     throw new Error('Error thrown modifying Windows8 mobile spec application.');
                 }
 
-                log('Modifying Cordova windows8 application.');
-                // var configFile = path.join(output, 'www', 'config.xml');
-                var configFile = path.join(output, '..', '..', 'config.xml');
-                // modify start page
-                fs.writeFileSync(configFile, fs.readFileSync(configFile, 'utf-8').replace(
-                    /<content\s*src=".*"/gi, '<content src="' + entry_point.split('www\/').join('') + '"'), 'utf-8');
-                // make sure the couch db server is whitelisted
-                fs.writeFileSync(configFile, fs.readFileSync(configFile, 'utf-8').replace(
-                  /<access origin="http:..audio.ibeat.org" *.>/gi,'<access origin="http://audio.ibeat.org" /><access origin="'+couchdb_host+'" />', 'utf-8'));
 
                 // specify couchdb server and sha for cordova medic plugin via medic.json
                 log('Write medic.json to autotest folder');

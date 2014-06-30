@@ -56,15 +56,6 @@ module.exports = function(output, sha, devices, entry_point, couchdb_host, test_
                     fs.writeFileSync(tempJasmine, "var library_sha = '" + sha + "';\n" + fs.readFileSync(tempJasmine, 'utf-8'), 'utf-8');
                 }
 
-                // modify start page
-                var mainPageLines = fs.readFileSync(path.join(output, 'MainPage.xaml.cs')).toString().split('\n');
-                var index = 0;
-                while (mainPageLines[index].indexOf('InitializeComponent();') == -1) ++index;
-                ++index;
-                if (mainPageLines[index].indexOf(entry_point) == -1)
-                    mainPageLines.splice(index, 0, '            this.CordovaView.StartPageUri = new Uri("'+ entry_point + '", UriKind.Relative);');
-                fs.writeFileSync(path.join(output, 'MainPage.xaml.cs'), mainPageLines.join('\n'));
-
                 // set permanent guid to prevent multiple installations
                 var guid = '{8449DEEE-16EB-4A4A-AFCC-8446E8F06FF7}';
                 var appManifestXml = path.join(output, 'Properties', 'WMAppManifest.xml');
@@ -83,11 +74,6 @@ module.exports = function(output, sha, devices, entry_point, couchdb_host, test_
                 }
                 fs.writeFileSync(appManifestXml, xml.join('\n'));
 
-
-                // make sure the couch db server is whitelisted
-                var configFile = path.join(output, 'www', 'config.xml');
-                fs.writeFileSync(configFile, fs.readFileSync(configFile, 'utf-8').replace(
-                  /<access origin="http:..audio.ibeat.org" *.>/gi,'<access origin="http://audio.ibeat.org" /><access origin="'+couchdb_host+'" />', 'utf-8'));
 
                 // specify couchdb server and sha for cordova medic plugin via medic.json
                 log('Write medic.json to autotest folder');
@@ -109,4 +95,4 @@ module.exports = function(output, sha, devices, entry_point, couchdb_host, test_
         }).then(function() {
             return testRunner.waitTestsCompleted(sha, 1000 * test_timeout);
         });
-}
+};
