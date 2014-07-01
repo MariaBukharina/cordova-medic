@@ -6,7 +6,7 @@
         "port":8088
     },
     "app":{
-        "entry":"www/autotest/pages/all.html",
+        "entry":"autotest/pages/all.html",
         "platforms":"windows8,wp8",
         "release":"master",
         "timeout": 600
