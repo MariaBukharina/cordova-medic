@@ -4,14 +4,14 @@
     "title" : "Android Master Platform",
     "categories" : ["ANDROID","CLI","PLUGMAN","COHO","MSPEC","TESTMASTER","JS"],
     "branch" : "master",
-    "builder": "Android_Master",
+    "builder": "Android",
     "platform": "android"
   },
   {
     "title" : "Android Master Plugins",
     "categories" : ["PLUGIN"],
     "branch" : "master",
-    "builder": "Android_Master",
+    "builder": "Android",
     "platform": "android"
   }
 ,
@@ -19,14 +19,14 @@
     "title" : "IOS Master Platform",
     "categories" : ["IOS","CLI","PLUGMAN","COHO","MSPEC","TESTMASTER","JS"],
     "branch" : "master",
-    "builder": "IOS_Master",
+    "builder": "IOS",
     "platform": "ios"
   },
   {
     "title" : "IOS Master Plugins",
     "categories" : ["PLUGIN"],
     "branch" : "master",
-    "builder": "IOS_Master",
+    "builder": "IOS",
     "platform": "ios"
   }
 ,
@@ -34,14 +34,14 @@
     "title" : "Windows Phone8 master",
     "categories" : ["WP8"],
     "branch" : "master",
-    "builder": "WP8_Master",
+    "builder": "WP8",
     "platform": "wp8"
   },
   {
     "title" : "Windows 8 master",
     "categories" : ["WINDOWS8"],
     "branch" : "master",
-    "builder": "Windows8_Master",
+    "builder": "Windows8",
     "platform": "windows8"
   }
 ,
@@ -49,14 +49,14 @@
     "title" : "BlackBerry Master Platform",
     "categories" : ["BLACKBERRY","CLI","PLUGMAN","COHO","MSPEC","TESTMASTER","JS"],
     "branch" : "master",
-    "builder": "BlackBerry_Master",
+    "builder": "BlackBerry",
     "platform": "blackberry"
   },
   {
     "title" : "BlackBerry Master Plugins",
     "categories" : ["PLUGIN"],
     "branch" : "master",
-    "builder": "BlackBerry_Master",
+    "builder": "BlackBerry",
     "platform": "blackberry"
   }
 ,
