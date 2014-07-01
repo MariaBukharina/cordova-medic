@@ -15,8 +15,13 @@ Medic using BuildBot
 ##Select target OS
 Install on a Mac or Windows depending on target test platform(s)
 
+##Install prerequisites
+medic requires grunt-cli npm package to be installed globally. You can install it by typing `npm install -g grunt-cli` in console.
+
+**Note:** this requires admin privileges on Mac OS.
+
 ## Setup CouchDB
-1. Get and install [couchdb] (http://couchdb.apache.org/) 1.3.1 
+1. Get and install [couchdb](http://couchdb.apache.org/) 1.3.1 
 2. Edit the local.ini to accept request from external host
 
   `bind_address = 0.0.0.0`
@@ -29,7 +34,7 @@ Install on a Mac or Windows depending on target test platform(s)
 4. Set up a wireless access point so that the devices being tested can access the couchDB
 
 ## Install BuildBot
-1. Get [buildbot] (http://buildbot.net) version 0.8.8
+1. Get [buildbot](http://buildbot.net) version 0.8.8
 2. Install buildbot using the buildbot install/tutorial instructions
     http://docs.buildbot.net/latest/manual/installation.html
 
@@ -50,6 +55,8 @@ Install on a Mac or Windows depending on target test platform(s)
     - config.json.sample -  copy to the buildbot base directory, then edit for local ip, test platforms, ios keychain, current release build
   - On Windows
     - config.json.sample-windows -  copy to the buildbot base directory, then edit for local ip
+
+    **Note:** couchdb host should be specified via ip address instead of hostname due to Windows8 specific issues.
 
 #Running the System
 - start the master with ~buildbot start master
@@ -73,9 +80,6 @@ Install on a Mac or Windows depending on target test platform(s)
 - all changes for a local install should only require edits to config.json in the buildbot base directory
 - new platforms, test procedures, build steps, etc require edits to master.cfg and repos.json which should still be global (all platforms)
 - whenever config.json, repos.json or master.cfg changes, you need to restart the master (not slaves)
-
-**Note:**  if you install the master on a separate machine from the slave(s), the config.json must be on both machines. 
-The slaves expect to find the file in the buildbot root and require the ios key information, couchdb IP and the start page.
 
 #Overview
 Buildbot polls all the repositories every few minutes to look for changes. Whenever a change is detected, those changes trigger one or more build requests. 
@@ -129,7 +133,4 @@ Tests define the components and branches that should trigger a test run.
 This requires multiple triggers for each test path since a build might use tools from master, platforms from release and plugins from dev.
 
 For each repo there is a release branch (most recent supported release) and a current branch (tip-of-tree). 
-The branches are used by the python script in conjunction with the tests to set up the trggers. 
-  
-
- 
+The branches are used by the python script in conjunction with the tests to set up the trggers.
