@@ -7,7 +7,7 @@ var shell        = require('shelljs'),
     q            = require('q'),
     testRunner   = require('./testRunner');
 
-module.exports = function(output, sha, entry_point, couchdb_host, test_timeout, callback) {
+module.exports = function(output, sha, entry_point, couchdb_host, test_timeout, build_target) {
 
     function run() {
         var d = q.defer();
@@ -15,8 +15,11 @@ module.exports = function(output, sha, entry_point, couchdb_host, test_timeout, 
         // the following hack with explorer.exe usage is required to start the tool w/o Admin privileges;
         // in other case there will be the 'app can't open while File Explorer is running with administrator privileges ...' error
         // 'restricted' is used to prevent powershell script (part of build.bat) which requires user interaction to run
-        var cmd = '..\\cordova-cli\\bin\\cordova.cmd run';
+        var cmd = '..\\cordova-cli\\bin\\cordova.cmd run',
             runner = 'run.bat';
+        if (build_target == "store80" || build_target == "phone"){
+            cmd += ' -- --' + build_target;
+        }
         fs.writeFileSync(runner, 'cd /d "' + shell.pwd() + '"\n' + cmd, 'utf-8');
         log(cmd);
         shell.exec('explorer run.bat', {silent:true, async:true}, function(code, output) {
