@@ -18,11 +18,13 @@ if (!fs.existsSync(configFile)){
         var configContent = fs.readFileSync(configFile, 'utf-8');
         // replace/add start page preference
         // check if config.xml already contains <content /> element
+        console.log('Setting entry point to ' + entry_point + ' in config.xml');
         if (configContent.match(/<content\s*src=".*"\s*\/>/gi)){
-            configContent.replace(/<content\s*src=".*"\s*\/>/gi, entry_point);
+            configContent = configContent.replace(
+                /<content\s*src=".*"\s*\/>/gi,
+                '<content src="' + entry_point + '" />');
         } else {
             // add entry point to config
-            console.log('Setting entry point to ' + entry_point + ' in config.xml');
             configContent = configContent.split('</widget>').join('') +
                 '    <content src="' + entry_point + '"/>\n</widget>';
         }
@@ -30,7 +32,9 @@ if (!fs.existsSync(configFile)){
         // Whitelists support on windows 8 is broken and cause build errors
         if (argv.windows || argv.windows8){
             console.warn('Current platform is windows. Removing all whitelist rules.');
-            configContent.replace(/<access\s+origin=.*?\/>/gi, '');
+            configContent = configContent.replace(/\s*<access\s+origin=.*\/>/gim, '');
+            //cleanup doubled line ends
+            configContent = configContent.replace('\n\n', '\n');
         } else {
             // add whitelisting rule allow access to couch server
             console.log('Adding whitelist rule for CouchDB host: ' + couch_host);
