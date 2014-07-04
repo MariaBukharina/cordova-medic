@@ -66,7 +66,7 @@ module.exports = function(output, sha, entry_point, couchdb_host, test_timeout, 
                             '<!-- <script type="text/javascript" src="../tests/file.tests.js"></script> -->'),'utf-8');
                 }
 
-                // Disable device plugin tests on windows phone due to Mobilespec app failure on windows phone 8.1
+                // Disable contacts/device plugin tests on windows phone due to Mobilespec app failure on windows phone 8.1
                 if (build_target == "phone"){
 
                     // Disable tests
@@ -74,6 +74,10 @@ module.exports = function(output, sha, entry_point, couchdb_host, test_timeout, 
                     fs.writeFileSync(fileToEdit, fs.readFileSync(fileToEdit, 'utf-8')
                         .replace('<script type="text/javascript" src="../tests/device.tests.js"></script>',
                             '<!-- <script type="text/javascript" src="../tests/device.tests.js"></script> -->'), 'utf-8');
+                    log('Commenting out contacts plugin tests in ' + fileToEdit);
+                    fs.writeFileSync(fileToEdit, fs.readFileSync(fileToEdit, 'utf-8')
+                        .replace('<script type="text/javascript" src="../tests/contacts.tests.js"></script>',
+                            '<!-- <script type="text/javascript" src="../tests/contacts.tests.js"></script> -->'), 'utf-8');
                     
                     // remove dependency element
                     fileToEdit = path.join(output, '..', '..', 'plugins','org.cordova.mobile-spec-dependencies', 'plugin.xml');
@@ -81,17 +85,29 @@ module.exports = function(output, sha, entry_point, couchdb_host, test_timeout, 
                     fs.writeFileSync(fileToEdit, fs.readFileSync(fileToEdit, 'utf-8')
                         .replace('<dependency id="org.apache.cordova.device"/>',
                             '<!--   <dependency id="org.apache.cordova.device"/> -->'),'utf-8');
+                    log('Removing dependency from contacts plugin in ' + fileToEdit);
+                    fs.writeFileSync(fileToEdit, fs.readFileSync(fileToEdit, 'utf-8')
+                        .replace('<dependency id="org.apache.cordova.contacts"/>',
+                            '<!--   <dependency id="org.apache.cordova.contacts"/> -->'),'utf-8');
                     
                     // uninstall plugin
                     var cmd = '..\\cordova-cli\\bin\\cordova.cmd plugin rm org.apache.cordova.device';
-                    shell.pushd('mobilespec');
                     log('Uninstalling device plugin with ' + cmd + ' at ' + shell.pwd());
-                    shell.exec(cmd, {silent:true, async:true}, function(code, output) {
-                        shell.popd();
-                        if (code > 0) {
-                            defer.reject('Unable to uninstall org.apache.cordova.device plugin');
-                        }
-                    });
+                    shell.pushd('mobilespec');
+                    var command = shell.exec(cmd);
+                    shell.popd();
+                    if (command.code > 0) {
+                        defer.reject('Unable to uninstall org.apache.cordova.device plugin');
+                    }
+                    
+                    cmd = '..\\cordova-cli\\bin\\cordova.cmd plugin rm org.apache.cordova.contacts';
+                    log('Uninstalling contacts plugin with ' + cmd + ' at ' + shell.pwd());
+                    shell.pushd('mobilespec');
+                    command = shell.exec(cmd);
+                    shell.popd();
+                    if (command.code > 0) {
+                        defer.reject('Unable to uninstall org.apache.cordova.contacts plugin');
+                    }
                 }
 
                 defer.resolve();
