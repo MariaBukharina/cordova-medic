@@ -59,11 +59,40 @@ module.exports = function(output, sha, entry_point, couchdb_host, test_timeout, 
                 fs.writeFileSync(path.join(output, '..', '..', 'www','autotest','pages', 'medic.json'),medic_config,'utf-8');
 
                 // Disable file plugin tests due to Mobilespec app failure on windows 8
-                fs.writeFileSync(
-                    path.join(output, '..', '..', 'www','autotest','pages', 'all.html'),
-                    fs.readFileSync(path.join(output, '..', '..', 'www','autotest','pages', 'all.html'), 'utf-8')
+                var fileToEdit = path.join(output, '..', '..', 'www','autotest','pages', 'all.html');
+                if (build_target == "store80" || build_target == "store") {
+                    fs.writeFileSync(fileToEdit, fs.readFileSync(fileToEdit, 'utf-8')
                         .replace('<script type="text/javascript" src="../tests/file.tests.js"></script>',
                             '<!-- <script type="text/javascript" src="../tests/file.tests.js"></script> -->'),'utf-8');
+                }
+
+                // Disable device plugin tests on windows phone due to Mobilespec app failure on windows phone 8.1
+                if (build_target == "phone"){
+
+                    // Disable tests
+                    log('Commenting out device plugin tests in ' + fileToEdit);
+                    fs.writeFileSync(fileToEdit, fs.readFileSync(fileToEdit, 'utf-8')
+                        .replace('<script type="text/javascript" src="../tests/device.tests.js"></script>',
+                            '<!-- <script type="text/javascript" src="../tests/device.tests.js"></script> -->'), 'utf-8');
+                    
+                    // remove dependency element
+                    fileToEdit = path.join(output, '..', '..', 'plugins','org.cordova.mobile-spec-dependencies', 'plugin.xml');
+                    log('Removing dependency from device plugin in ' + fileToEdit);
+                    fs.writeFileSync(fileToEdit, fs.readFileSync(fileToEdit, 'utf-8')
+                        .replace('<dependency id="org.apache.cordova.device"/>',
+                            '<!--   <dependency id="org.apache.cordova.device"/> -->'),'utf-8');
+                    
+                    // uninstall plugin
+                    var cmd = '..\\cordova-cli\\bin\\cordova.cmd plugin rm org.apache.cordova.device';
+                    shell.pushd('mobilespec');
+                    log('Uninstalling device plugin with ' + cmd + ' at ' + shell.pwd());
+                    shell.exec(cmd, {silent:true, async:true}, function(code, output) {
+                        shell.popd();
+                        if (code > 0) {
+                            defer.reject('Unable to uninstall org.apache.cordova.device plugin');
+                        }
+                    });
+                }
 
                 defer.resolve();
             });
