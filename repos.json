@@ -16,7 +16,7 @@
   },
     {
     "title" : "Android Build Windows",
-    "categories" : ["PLUGIN"],
+    "categories" : ["ANDROID","CLI"],
     "branch" : "master",
     "builder": "AndroidWin",
     "platform": "android"
