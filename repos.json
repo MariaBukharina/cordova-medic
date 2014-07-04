@@ -13,8 +13,15 @@
     "branch" : "master",
     "builder": "Android",
     "platform": "android"
-  }
-,
+  },
+    {
+    "title" : "Android Build Windows",
+    "categories" : ["PLUGIN"],
+    "branch" : "master",
+    "builder": "AndroidWin",
+    "platform": "android"
+  }, 
+  
   {
     "title" : "IOS Master Platform",
     "categories" : ["IOS","CLI","PLUGMAN","COHO","MSPEC","TESTMASTER","JS"],

@@ -7,7 +7,7 @@
     },
     "app":{
         "entry":"autotest/pages/all.html",
-        "platforms":"windows8,wp8",
+        "platforms":"windows8,wp8,android",
         "release":"master",
         "timeout": 600
     },
