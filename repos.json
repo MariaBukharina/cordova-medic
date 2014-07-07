@@ -41,14 +41,14 @@
     "title" : "Windows Phone8 master",
     "categories" : ["WP8"],
     "branch" : "master",
-    "builder": "WP8",
+    "builder": ["WP8", "WP8_vs2012_win8"],
     "platform": "wp8"
   },
   {
     "title" : "Windows 8 master",
     "categories" : ["WINDOWS8"],
     "branch" : "master",
-    "builder": "Windows8",
+    "builder": ["Windows8", "Windows8_vs2012_win8"],
     "platform": "windows8"
   }
 ,
